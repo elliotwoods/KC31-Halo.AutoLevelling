@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<title>Auto levelling</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="stylesheet" href="/css/bootstrap.cosmo.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+	
+	<script>
+		var response = {{ response|tojson|safe }};
+
+		function refresh() {
+			$.getJSON( "/values", function( data ) {
+				$("#x").val(data.x);
+				$("#y").val(data.y);
+				$("#datumTimestamp").text(data.datumTimestamp);
+				refresh();
+			});
+		}
+
+		function showError(response) {
+			$("#errorContainer").show();
+			$("#error").html("<strong>" + response.error + "</strong><br />"
+			 		+ response.traceback);
+		}
+
+		function hideError() {
+			$("#errorContainer").hide();
+		}
+
+		function showSuccess(response) {
+			$("#successContainer").show();
+			$("#success").html("<strong>Success!</strong>");
+		}
+
+		function hideSuccess() {
+			$("#successContainer").hide();
+		}
+		
+		var progressBarWidth = 0;
+
+		function datumSubmit() {
+			hideSuccess();
+			hideError();
+			
+			message = {
+				ipAddress : $("#ipAddress").val()
+			};
+
+			$.ajax({
+			type : "POST"
+			, contentType: "application/json; charset=utf-8"
+			, url : "/setDatum"
+			, data : JSON.stringify(message)
+			, success : $.proxy(function(response) {
+					if(response.success) {
+						$("#datumSubmitModal").modal('hide');
+						showSuccess(response);
+					}
+					else {
+						$("#datumSubmitModal").modal('hide');
+						showError(response);
+					}
+				}, this)
+			, error: function (xhr, ajaxOptions, thrownError) {
+					response = {};
+					response.error = xhr.status;
+					response.traceback = thrownError;
+					showError(response);
+				}
+			});
+
+			//show waiting dialog
+			$("#datumSubmitModal").modal('show');
+			
+			progressBarWidth = 0.0;
+			updateProgressBar();
+		}
+
+		function updateProgressBar() {
+			if(($("#datumSubmitModal").data('bs.modal') || {}).isShown && progressBarWidth < 100) {
+				progressBarWidth += 100.0 / (30.0 * 10);
+				$("#datumProgressBar").width(progressBarWidth.toString() + "%");
+				setTimeout(function() {
+					updateProgressBar();
+				}, 100);
+			}			
+		}
+
+		function faceDown() {
+			hideSuccess();
+			hideError();
+
+			message = {
+				ipAddress : $("#ipAddress").val()
+			};
+			$.ajax({
+			type : "POST"
+			, contentType: "application/json; charset=utf-8"
+			, url : "/faceDown"
+			, data : JSON.stringify(message)
+			, success : $.proxy(function(response) {
+					if(response.success) {
+						showSuccess(response);
+					}
+					else {
+						showError(response);
+					}
+				}, this)
+			});
+		}
+
+		$(document).ready(function() {
+			if(response.success) {
+				hideError();
+			}
+			else {
+				showError(response);
+			}
+			hideSuccess();
+			refresh();
+		});
+	</script>
+</head>
+
+<body>
+	<div id="datumSubmitModal" class="modal fade" role="dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal">&times;</button>
+				<h4 class="modal-title">Measuring datum</h4>
+			</div>
+			<div class="modal-body">
+				<div class="progress" style="overflow: none">
+					<div class="progress-bar" style="width: 0%;" id="datumProgressBar"></div>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+			</div>
+		</div>
+	</div>
+
+	<div class="container">
+		<div class="alert alert-danger" id="errorContainer" >
+			<a href="#" class="close" aria-label="close" onclick="hideError()">&times;</a>
+			<span id="error"></span>
+		</div>
+		<div class="alert alert-success" id="successContainer" >
+			<a href="#" class="close" aria-label="close" onclick="hideSuccess()">&times;</a>
+			<span id="success"></span>
+		</div>
+		<div class="page-header">
+			<h1>Auto levelling</h1>
+		</div>
+		<form action="/" method="post">
+			<div class="row">
+				<div class="col-sm-4">
+					<div class="form-group">
+						<label for="x">x:</label>
+						<input class="form-control" id="x" placeholder="20.2" disabled/>
+					</div>
+				</div>
+				<div class="col-sm-4">
+					<div class="form-group">
+						<label for="x">y:</label>
+						<input class="form-control" id="y" placeholder="-20.2" disabled/>
+					</div>
+				</div>
+			</div>
+			<div class="form-group">
+				<label for="ipAddress">ipAddress:</label>
+				<input class="form-control" id="ipAddress" name="ipAddress" placeholder="192.168.0.1" value="{{ ipAddress }}"/>
+			</div>
+			<button type="submit" class="btn btn-info"><span class="glyphicon glyphicon-repeat"></span>&nbsp;&nbsp;Correct</button>
+			<button type="button" onclick="datumSubmit()" class="btn btn-success"><span class="glyphicon glyphicon-download"></span>&nbsp;&nbsp;Submit datum</button>
+			<button type="button" onclick="faceDown()" class="btn btn-default"><span class=" glyphicon glyphicon-chevron-down"></span>&nbsp;&nbsp;Face down</button>
+			<span id="datumTimestamp"></span>
+		</form>
+	</div>
+</body>
+
+</html>

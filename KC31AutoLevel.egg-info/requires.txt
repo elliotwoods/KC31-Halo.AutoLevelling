@@ -1,0 +1,7 @@
+flask
+pymongo
+requests
+ipython
+sympy
+numpy
+pyserial

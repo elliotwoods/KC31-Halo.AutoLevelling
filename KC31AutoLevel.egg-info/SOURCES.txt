@@ -1,0 +1,7 @@
+KC31AutoLevel/__init__.py
+KC31AutoLevel/serialDevice.py
+KC31AutoLevel.egg-info/PKG-INFO
+KC31AutoLevel.egg-info/SOURCES.txt
+KC31AutoLevel.egg-info/dependency_links.txt
+KC31AutoLevel.egg-info/requires.txt
+KC31AutoLevel.egg-info/top_level.txt
