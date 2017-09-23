@@ -58,6 +58,7 @@
 			, success : $.proxy(function(response) {
 					if(response.success) {
 						$("#datumSubmitModal").modal('hide');
+						$("#datumTimestamp").text("Timestamp : " + response.timestamp)
 						showSuccess(response);
 					}
 					else {
@@ -66,6 +67,7 @@
 					}
 				}, this)
 			, error: function (xhr, ajaxOptions, thrownError) {
+					$("#datumSubmitModal").modal('hide');
 					response = {};
 					response.error = xhr.status;
 					response.traceback = thrownError;

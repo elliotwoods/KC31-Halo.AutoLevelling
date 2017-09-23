@@ -134,17 +134,19 @@ def faceDown():
 @app.route("/setDatum", methods=['POST', 'GET'])
 def setDatum():
 	try:
+		print("Setting datum")
 		incomingMessage = request.json
 		url = "http://" + incomingMessage['ipAddress'] + ":5000/datum/set"
 	
+		
 		postResult = requests.get(url)
 		content = json.loads(postResult.content.decode("utf-8"))
 		if not content['success']:
 			return content
-		
+
 		return jsonify({
 			"success" : True,
-			"timestamp" : postResult
+			"timestamp" : content['timestamp']
 		})
 	except Exception as e:
 		return jsonify({
